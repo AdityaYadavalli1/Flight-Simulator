@@ -5,50 +5,7 @@ Arrow::Arrow(float x, float y, float z, float size) {
     this->position = glm::vec3(x, y, z);
     this->rotation = 0;
     this->size = size;
-    this->counter = 0;
-    this->countTime = 200;
     speed = 1;
-    this->isBoss = 0;
-    // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
-    // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
-    // static const GLfloat vertex_main_body[] = {
-    //   -1*this->size,-2*this->size,-1*this->size, // triangle 1 : begin
-    //     -1*this->size,-2*this->size, this->size,
-    //     -1*this->size, 2*this->size, this->size, // triangle 1 : end
-    //     this->size, 2*this->size,-1*this->size, // triangle 2 : begin
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size,-1*this->size, // triangle 2 : end
-    //     this->size,-2*this->size, this->size,
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     this->size,-2*this->size,-1*this->size,
-    //     this->size, 2*this->size,-1*this->size,
-    //     this->size,-2*this->size,-1*this->size,
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size, this->size,
-    //     -1*this->size, 2*this->size,-1*this->size,
-    //     this->size,-2*this->size, this->size,
-    //     -1*this->size,-2*this->size, this->size,
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size, this->size,
-    //     -1*this->size,-2*this->size, this->size,
-    //     this->size,-2*this->size, this->size,
-    //     this->size, 2*this->size, this->size,
-    //     this->size,-2*this->size,-1*this->size,
-    //     this->size, 2*this->size,-1*this->size,
-    //     this->size,-2*this->size,-1*this->size,
-    //     this->size, 2*this->size, this->size,
-    //     this->size,-2*this->size, this->size,
-    //     this->size, 2*this->size, this->size,
-    //     this->size, 2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size,-1*this->size,
-    //     this->size, 2*this->size, this->size,
-    //     -1*this->size, 2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size, this->size,
-    //     this->size, 2*this->size, this->size,
-    //     -1*this->size, 2*this->size, this->size,
-    //     this->size,-2*this->size, this->size
-    // };
     std::vector<GLfloat> vertices;
   	std::vector<GLfloat> uvs;
   	std::vector<GLfloat> normals; // Won't be used at the moment.

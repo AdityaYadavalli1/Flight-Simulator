@@ -10,51 +10,12 @@ Volcano::Volcano(float x, float y, float z, float size, int health) {
     this->countTime = 200;
     speed = 1;
     this->isBoss = 0;
-    // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
-    // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
-    // static const GLfloat vertex_main_body[] = {
-    //   -1*this->size,-2*this->size,-1*this->size, // triangle 1 : begin
-    //     -1*this->size,-2*this->size, this->size,
-    //     -1*this->size, 2*this->size, this->size, // triangle 1 : end
-    //     this->size, 2*this->size,-1*this->size, // triangle 2 : begin
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size,-1*this->size, // triangle 2 : end
-    //     this->size,-2*this->size, this->size,
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     this->size,-2*this->size,-1*this->size,
-    //     this->size, 2*this->size,-1*this->size,
-    //     this->size,-2*this->size,-1*this->size,
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size, this->size,
-    //     -1*this->size, 2*this->size,-1*this->size,
-    //     this->size,-2*this->size, this->size,
-    //     -1*this->size,-2*this->size, this->size,
-    //     -1*this->size,-2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size, this->size,
-    //     -1*this->size,-2*this->size, this->size,
-    //     this->size,-2*this->size, this->size,
-    //     this->size, 2*this->size, this->size,
-    //     this->size,-2*this->size,-1*this->size,
-    //     this->size, 2*this->size,-1*this->size,
-    //     this->size,-2*this->size,-1*this->size,
-    //     this->size, 2*this->size, this->size,
-    //     this->size,-2*this->size, this->size,
-    //     this->size, 2*this->size, this->size,
-    //     this->size, 2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size,-1*this->size,
-    //     this->size, 2*this->size, this->size,
-    //     -1*this->size, 2*this->size,-1*this->size,
-    //     -1*this->size, 2*this->size, this->size,
-    //     this->size, 2*this->size, this->size,
-    //     -1*this->size, 2*this->size, this->size,
-    //     this->size,-2*this->size, this->size
-    // };
     std::vector<GLfloat> vertices;
   	std::vector<GLfloat> uvs;
   	std::vector<GLfloat> normals; // Won't be used at the moment.
     bool res = loadOBJwoUV("../src/volcano.obj", vertices, normals);
-    this->main_body = create3DObject(GL_TRIANGLES, vertices.size()/3, &vertices[0], COLOR_DARK_BROWN, GL_FILL);
+    this->main_body = create3DObject(GL_TRIANGLES, vertices.size()/3, &vertices[0], COLOR_BROWN, GL_FILL);
+    this->bb = create3DObject(GL_TRIANGLES, vertices.size()/3, &vertices[0], COLOR_DARK_BROWN, GL_LINE);
 }
 
 void Volcano::draw(glm::mat4 VP) {
@@ -68,6 +29,7 @@ void Volcano::draw(glm::mat4 VP) {
     glm::mat4 MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
     draw3DObject(this->main_body);
+    draw3DObject(this->bb);
 }
 
 void Volcano::set_position(float x, float y) {

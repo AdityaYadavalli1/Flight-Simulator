@@ -3,6 +3,7 @@
 #include "water.h"
 #include "rock.h"
 #include "flame.h"
+#include "monflame.h"
 #include "monster.h"
 #include "volcano.h"
 #include "arrow.h"
@@ -32,7 +33,8 @@ int currentCheckpoint = 0;
 vector<Rock> rocks;
 vector<Volcano> volcanoes;
 vector<Flame> flames;
-vector<Flame> monflames;
+vector<Monflame> monflames;
+vector<Flame> monsflames;
 vector<Arrow> arrows;
 vector<Monster> monsters;
 vector<Smoke> smoke;
@@ -44,10 +46,6 @@ Ball ball;
 Water water;
 Fuel fuel;
 Altitude altitude;
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-int camrotate = 0;
 Timer t60(1.0 / 60);
 int countTime = 20;
 int EcountTime = 150;
@@ -114,21 +112,42 @@ void draw() {
     glm::mat4 MVP;  // MVP = Projection * View * Model
 
     // Scene render
-    //player.draw(VP);
     water.draw(VP);
-    // player.draw(VP);
     ball.draw(VP);
     fuel.draw(VP);
     altitude.draw(VP);
-    // testloc.draw(VP);
-    for (int i = 0; i < (int)rocks.size(); rocks[i++].draw(VP));
-    for (int i = 0; i < (int)flames.size(); flames[i++].draw(VP));
-    for (int i = 0; i < (int)monflames.size(); monflames[i++].draw(VP));
-    for (int i = 0; i < (int)monsters.size(); monsters[i++].draw(VP));
-    for (int i = 0; i < (int)volcanoes.size(); volcanoes[i++].draw(VP));
-    for (int i = 0; i < (int)smoke.size(); smoke[i++].draw(VP));
-    for (int i = 0; i < (int)para.size(); para[i++].draw(VP));
-    for (int i = 0; i < (int)fuelcan.size(); fuelcan[i++].draw(VP));
+    for (int i = 0; i < (int)rocks.size(); i++)
+    {
+      rocks[i].draw(VP);
+    }
+    for (int i = 0; i < (int)flames.size(); i++)
+    {
+      flames[i].draw(VP);
+    }
+    for (int i = 0; i < (int)monflames.size(); i++)
+    {
+      monflames[i].draw(VP);
+    }
+    for (int i = 0; i < (int)monsters.size(); i++)
+    {
+      monsters[i].draw(VP);
+    }
+    for (int i = 0; i < (int)volcanoes.size(); i++)
+    {
+      volcanoes[i].draw(VP);
+    }
+    for (int i = 0; i < (int)smoke.size(); i++)
+    {
+      smoke[i].draw(VP);
+    }
+    for (int i = 0; i < (int)para.size(); i++)
+    {
+      para[i].draw(VP);
+    }
+    for (int i = 0; i < (int)fuelcan.size(); i++)
+    {
+      fuelcan[i].draw(VP);
+    }
     for (int i = 0; i < (int)arrows.size(); i++)
     {
       if(i==currentCheckpoint)
@@ -156,16 +175,28 @@ void tick_input(GLFWwindow *window) {
     int b = glfwGetKey(window, GLFW_KEY_B);
     int mouseLeft = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     int mouseRight = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
-    int one = glfwGetKey(window, GLFW_KEY_1);
+    int one = glfwGetKey(window, GLFW_KEY_1);//camera
     int two = glfwGetKey(window, GLFW_KEY_2);
     int three = glfwGetKey(window, GLFW_KEY_3);
     int four = glfwGetKey(window, GLFW_KEY_4);
     int five = glfwGetKey(window, GLFW_KEY_5);
 
-    if (one) viewType = 1;
-    if (two) viewType = 2;
-    if (three) viewType = 3;
-    if (four) viewType = 4;
+    if (one)
+    {
+      viewType = 1;
+    }
+    if (two)
+    {
+      viewType = 2;
+    }
+    if (three)
+    {
+      viewType = 3;
+    }
+    if (four)
+    {
+      viewType = 4;
+    }
     if (left)
     {
       ball.rotation += 1;
@@ -194,14 +225,16 @@ void tick_input(GLFWwindow *window) {
     {
       ball.rotation3 += 1;
     }
-    if (up) {
-      ball.position.z -= ball.speed*cos(ball.rotation*M_PI/180.0f);
+    if (up)
+    {
       ball.position.x -= ball.speed*sin(ball.rotation*M_PI/180.0f);
+      ball.position.z -= ball.speed*cos(ball.rotation*M_PI/180.0f);
       ball.fuel-= 2000;
     }
-    if (down) {
-      ball.position.z += ball.speed*cos(ball.rotation*M_PI/180.0f);
+    if (down)
+    {
       ball.position.x += ball.speed*sin(ball.rotation*M_PI/180.0f);
+      ball.position.z += ball.speed*cos(ball.rotation*M_PI/180.0f);
       ball.fuel-= 3000;
     }
     if (space)
@@ -214,7 +247,7 @@ void tick_input(GLFWwindow *window) {
         ball.position.y -= 0.3;
     }
     if(mouseLeft) {
-      cannon();
+      longshoot();
     }
     if(mouseRight) {
       shortshoot();
@@ -225,7 +258,8 @@ void tick_input(GLFWwindow *window) {
 }
 
 int canCount = 0;
-void cannon(){
+void longshoot()
+{
   if(canCount >= countTime)
   {
     canCount = 0;
@@ -233,7 +267,8 @@ void cannon(){
   }
   return;
 }
-void shortshoot() {
+void shortshoot()
+{
   if(canCount >= countTime)
   {
     canCount = 0;
@@ -241,7 +276,8 @@ void shortshoot() {
   }
   return;
 }
-void bombshoot() {
+void bombshoot()
+{
   if(canCount >= countTime)
   {
     canCount = 0;
@@ -251,77 +287,112 @@ void bombshoot() {
 }
 
 
-void tick_elements() {
+void tick_elements()
+{
   canCount++;
   ball.tick();
   fuel.tick(ball.fuel);
   altitude.tick(ball.position.y);
-  for(int i = 0; i < (int)para.size(); para[i++].tick())
-  for (int i = 0; i < (int)rocks.size(); rocks[i++].tick());
-
-  for (int i = 0; i < (int)flames.size(); i++) {
-    flames[i].tick();
-    if(flames[i].position.y < 0) flames.erase(flames.begin() + i);
+  for(int i = 0; i < (int)para.size(); i++)
+  {
+    para[i].tick();
+  }
+  for (int i = 0; i < (int)rocks.size(); i++)
+  {
+    rocks[i].tick();
   }
 
-  for (int i = 0; i < (int)monflames.size(); i++) {
-    if(monflames[i].position.y < 0 || monflames[i].position.y > 10) monflames.erase(monflames.begin() + i);
+  for (int i = 0; i < (int)flames.size(); i++)
+  {
+    flames[i].tick();
+  }
+  for (int i = 0; i < (int)monflames.size(); i++)
+  {
     monflames[i].tick();
   }
-
-  for (int i = 0; i < (int)monsters.size();  monsters[i++].tick());
+  for (int i = 0; i < (int)monsflames.size(); i++)
+  {
+    monsflames[i].tick();
+  }
+  for (int i = 0; i < (int)monsters.size(); i++)
+  {
+    monsters[i].tick();
+  }
 
 }
 
-void cannonball_monster_collisions(){
-  for (int i = 0; i < (int)monsters.size(); i++){
-    for (int j = 0; j < (int)flames.size(); j++){
-      if (detect_collision(flames[j].bounding_box(), monsters[i].bounding_box())){
-        monsters[i].health -= ball.power;
+void cannonball_monster_collisions()
+{
+  for (int i = 0; i < (int)monsters.size(); i++)
+  {
+    for (int j = 0; j < (int)flames.size(); j++)
+    {
+      if (detect_collision(flames[j].bounding_box(), monsters[i].bounding_box()))
+      {
         flames.erase(flames.begin() + j);
+        monsters[i].health -= ball.power;
       }
     }
   }
+  return;
 }
-void fuelcan_player_collisions() {
-  for (int i = 0; i < (int)fuelcan.size(); i++){
-    if (detect_collision(fuelcan[i].bounding_box(), ball.bounding_box())){
+void fuelcan_player_collisions()
+{
+  for (int i = 0; i < (int)fuelcan.size(); i++)
+  {
+    if (detect_collision(fuelcan[i].bounding_box(), ball.bounding_box()))
+    {
         fuelcan.erase(fuelcan.begin() + i);
         ball.fuel += 100000;
       }
     }
+    return;
 }
 
-
-void cannonball_rock_collisions(){
-  for(int i = 0; i < (int)flames.size(); i++){
+void cannonball_rock_collisions()
+{
+  for(int i = 0; i < (int)flames.size(); i++)
+  {
     for(int j = 0; j < (int)rocks.size(); j++)
-      if(detect_collision(flames[i].bounding_box(), rocks[j].bounding_box())){
-        score += 1;
+    {
+      if(detect_collision(flames[i].bounding_box(), rocks[j].bounding_box()))
+      {
         flames.erase(flames.begin() + i);
         rocks.erase(rocks.begin() + j);
-      }
-  }
+        score += 1;
 
+      }
+    }
+  }
+  return;
 }
-void cannonball_para_collisions(){
-  for(int i = 0; i < (int)flames.size(); i++){
+void cannonball_para_collisions()
+{
+  for(int i = 0; i < (int)flames.size(); i++)
+  {
     for(int j = 0; j < (int)para.size(); j++)
-      if(detect_collision(flames[i].bounding_box(), para[j].bounding_box())){
-        score += 100;
+    {
+      if(detect_collision(flames[i].bounding_box(), para[j].bounding_box()))
+      {
         flames.erase(flames.begin() + i);
         para.erase(para.begin() + j);
+        score += 100;
       }
+    }
   }
-
+  return;
 }
-void detect_player_monflames_collisions() {
-  for (int i = 0; i < (int)monflames.size(); i++){
-    if (detect_collision(monflames[i].bounding_box(), ball.bounding_box())){
+void detect_player_monflames_collisions()
+{
+  for (int i = 0; i < (int)monflames.size(); i++)
+  {
+    if (detect_collision(monflames[i].bounding_box(), ball.bounding_box()))
+    {
       health -= monflames[i].damage;
       monflames.erase(monflames.begin() + i);
     }
   }
+  return;
 }
 bool volcano_helper()
 {
@@ -330,7 +401,6 @@ bool volcano_helper()
 
       if(glm::distance(volcanoes[i].position,ball.position) <= volcanoRadius)
       {
-        // printf("%f\n",glm::distance(volcanoes[i].position,ball.position));
         return 1;
       }
   }
@@ -340,10 +410,8 @@ bool smoke_passed_helper()
 {
   for(int i=0;i<smoke.size();i++)
   {
-
       if(glm::distance(smoke[i].position,ball.position) <= smokeRadius)
       {
-        // printf("%f\n",glm::distance(smoke[i].position,ball.position));
         smoke.erase(smoke.begin() + i);
         return 1;
       }
@@ -356,7 +424,6 @@ void Para_inRadius()
   {
     if(glm::distance(para[i].position,ball.position) <= paraRadius)
     {
-      // printf("%f\n",glm::distance(para[i].position,ball.position));
       para[i].inRadius = 1;
     }
   }
@@ -377,7 +444,6 @@ void smoke_passed()
   }
 }
 void collisions() {
-  // detect_player_rock_collisions();
   cannonball_monster_collisions();
   detect_player_monflames_collisions();
   cannonball_rock_collisions();
@@ -386,7 +452,6 @@ void collisions() {
   Para_inRadius();
   cannonball_para_collisions();
   fuelcan_player_collisions();
-  // detect_player_volcano_collisions();
 }
 
 void helperGenerateRocks()
@@ -395,35 +460,36 @@ void helperGenerateRocks()
   for(int i = 0; i < numRocks/4; i++)
   {
     float y = 0.20;
-    float x = (rand()) /( static_cast <float> (RAND_MAX/(200)));
+    float x = (rand()) /((RAND_MAX/(200)));
     float z = (rand()) /((RAND_MAX/(200)));
     rocks.push_back(Rock(1*x, y, 1*y, COLOR_BROWN));
   }
   for(int i = 0; i < numRocks/4; i++)
   {
     float y = 0.20;
-    float x = (rand()) /( static_cast <float> (RAND_MAX/(200)));
+    float x = (rand()) /((RAND_MAX/(200)));
     float z = (rand()) /((RAND_MAX/(200)));
     rocks.push_back(Rock(1*x, y, -1*z, COLOR_BROWN));
   }
   for(int i = 0; i < numRocks/4; i++)
   {
     float y = 0.20;
-    float x = (rand()) /( static_cast <float> (RAND_MAX/(200)));
+    float x = (rand()) /( (RAND_MAX/(200)));
     float z = (rand()) /((RAND_MAX/(200)));
     rocks.push_back(Rock(-1*x, y, -1*z, COLOR_BROWN));
   }
   for(int i = 0; i < numRocks/4; i++)
   {
     float y = 0.20;
-    float x = (rand()) /( static_cast <float> (RAND_MAX/(200)));
+    float x = (rand()) /((RAND_MAX/(200)));
     float z = (rand()) /((RAND_MAX/(200)));
     rocks.push_back(Rock(-1*x, y, 1*z, COLOR_BROWN));
   }
   return;
 }
 
-void helperGenerateVolcanoes(){
+void helperGenerateVolcanoes()
+{
   int numVolcanoes = 40;
   for(int i = 0; i < numVolcanoes/4; i++)
   {
@@ -451,7 +517,8 @@ void helperGenerateVolcanoes(){
   }
   return;
 }
-void helperGenerateMonsters(){
+void helperGenerateMonsters()
+{
   int numMonsters = 32;
   float y = 2;
   for(int i = 0; i<numMonsters/4;i++)
@@ -479,7 +546,8 @@ void helperGenerateMonsters(){
     monsters.push_back(Monster(x*-1, 2, z*1, y/2, 50));
   }
 }
-void helperGenerateFuelcan(){
+void helperGenerateFuelcan()
+{
   int numFuelcan = 32;
   float y = 12;
   for(int i = 0; i<numFuelcan/4; i++)
@@ -507,7 +575,8 @@ void helperGenerateFuelcan(){
     fuelcan.push_back(Fuelcan(x*-1, y, z*1, y/2));
   }
 }
-void helperGenerateArrows() {
+void helperGenerateArrows()
+{
   int numArrows = 32;
   float y = 15;
   for(int i = 0; i<numArrows; i++)
@@ -517,7 +586,8 @@ void helperGenerateArrows() {
   return;
 }
 
-void helperGenerateSmoke() {
+void helperGenerateSmoke()
+{
   int numSmoke = 32;
   float y = 10;
   for(int i = 0; i<numSmoke; i++)
@@ -533,7 +603,8 @@ void helperGenerateSmoke() {
   }
   return;
 }
-void helperGeneratePara() {
+void helperGeneratePara()
+{
   int numPara = 32;
   float y = 140;
   for(int i = 0; i<numPara; i++)
@@ -542,25 +613,26 @@ void helperGeneratePara() {
   }
   return;
 }
-void monster_firing(Monster& M, float size, float vel, int damage){
+void monster_firing(Monster& M, float size, float vel)
+{
   float dist = glm::distance(M.position,ball.position);
   float vecx = ball.position.x - M.position.x;
   float vecy = ball.position.y - M.position.y;
   float vecz = ball.position.z - M.position.z;
-  float t = dist / vel;
-  Flame temp = Flame(M.position.x, M.position.y, M.position.z, size, 0, 0,vel*vecy/dist, COLOR_DARK_RED); // vecy/dist is component angle needed
-  temp.yaccel = 0;
-  temp.xvelocity = vel*vecx/dist;
-  temp.zvelocity = vel*vecz/dist;
-  temp.damage = damage;
-  monflames.push_back(temp);
+  float xvelocity = vel*vecx/dist;
+  float yvelocity = vel*vecy/dist;
+  float zvelocity = vel*vecz/dist;
+  Monflame temp1 = Monflame(M.position.x, M.position.y, M.position.z, 0, vel, xvelocity, yvelocity, zvelocity, COLOR_DARK_RED); // vecy/dist is component angle needed
+  // printf("%f--vecx, %f--vecy, %f--vecz, %f--yaccel, %f--xvel, %f--yvel, %f--zvel ---correct\n", vecx, vecy, vecz, temp.yaccel, temp.xvelocity, temp.yvelocity, temp.zvelocity);
+  // printf("%f--vecx, %f--vecy, %f--vecz, %f--yaccel, %f--xvel, %f--yvel, %f--zvel ---wrong\n", temp1.vecx, temp1.vecy, temp1.vecz, temp1.yaccel, temp1.xvelocity, temp1.yvelocity, temp1.zvelocity);
+  monflames.push_back(temp1);
+  // monsflames.push_back(temp1);
   M.counter = 0;
   return;
 }
 
 bool can_fire(Monster& M, float range)
 {
-  // if (inRange(ball.position.x, ball.position.y, ball.position.z, range, M) && M.counter >= M.countTime) return 1;
   if(glm::distance(ball.position,M.position)<=range && M.counter >= EcountTime)
   {
     return 1;
@@ -568,22 +640,26 @@ bool can_fire(Monster& M, float range)
   return 0;
 }
 int gameOver=0;
-void monster_handling(){
+void monster_handling()
+{
   for (int i = 0; i < (int)monsters.size(); i++)
     {
       //Monster Dies
-      if (monsters[i].health <= 0){
+      if (monsters[i].health <= 0)
+      {
         monsters.erase(monsters.begin() + i);
         currentCheckpoint++;
         score += 50;
       }
-      if (monsters.size() == 0) {
+      if (monsters.size() == 0)
+      {
           gameOver=1;
       }
       //If in Range fire and Time Gap, fire
-      if (can_fire(monsters[i], 30.0)){
-        monster_firing(monsters[i], 0.75, 0.2, 50);
-        }
+      if (glm::distance(ball.position,monsters[i].position)<=30.0 &&  monsters[i].counter >= EcountTime)
+      {
+        monster_firing(monsters[i], 0.75, 0.2);
+      }
     }
 }
 
@@ -610,7 +686,6 @@ void initGL(GLFWwindow *window, int width, int height) {
     programID = LoadShaders("Sample_GL.vert", "Sample_GL.frag");
     // Get a handle for our "MVP" uniform
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
-    Matrices.projection = glm::perspective(glm::radians(screen_zoom), (float)height / (float)width, 0.1f, 100.0f);
 
     reshapeWindow (window, width, height);
 
@@ -636,7 +711,6 @@ int main(int argc, char **argv) {
     window = initGLFW(width, height);
 
     initGL (window, width, height);
-    //    Matrices.projection = glm::perspective(glm::radians(screen_zoom), (float)height / (float)width, 0.1f, 100000000.0f);
     Matrices.projection = glm::perspective(glm::radians(screen_zoom), (float)600 / (float)600, 0.1f, 100.0f);
     /* Draw in loop */
     while (!glfwWindowShouldClose(window)) {
@@ -662,7 +736,6 @@ int main(int argc, char **argv) {
           if(gameOver) {
             cout << "Game Over, You won" << score <<'\n';
           }
-          // printf("%f -- ballrotate\n", ball.rotation);
         }
 
         // Poll for Keyboard and mouse events
@@ -677,22 +750,10 @@ bool detect_collision(bounding_box_t a, bounding_box_t b) {
            (abs(a.y - b.y) < (a.height + b.height)) &&
            (abs(a.z - b.z) < (a.length + b.length));
 }
-bool detect_collision_volcano(bounding_box_t a, bounding_box_t b) {
-    return (abs(a.x - b.x) < (a.width + b.width)) &&
-           (abs(a.y - b.y) < (a.height + b.height)) &&
-           (abs(a.z - b.z) < (a.length + b.length));
-}
 void reset_screen() {
     float top    = screen_center_y + 4 / screen_zoom;
     float bottom = screen_center_y - 4 / screen_zoom;
     float left   = screen_center_x - 4 / screen_zoom;
     float right  = screen_center_x + 4 / screen_zoom;
     Matrices.projection = glm::ortho(left, right, bottom, top, 0.1f, 500.0f);
-}
-
-
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-  if (yoffset > 0) screen_zoom -= 1;
-  if (yoffset < 0) screen_zoom += 1;
-  Matrices.projection = glm::perspective(glm::radians(screen_zoom), (float)600 / (float)600, 0.1f, 100.0f);
 }

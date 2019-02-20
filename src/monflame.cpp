@@ -1,16 +1,16 @@
-#include "flame.h"
+#include "monflame.h"
 #include "main.h"
 
-Flame::Flame(float x, float y, float z, float size, float angle, float velocity, float yvelocity, color_t color) {
+Monflame::Monflame(float x, float y, float z, float angle, float velocity, float xvelocity, float yvelocity, float zvelocity, color_t color) {
     this->position = glm::vec3(x, y, z);
-    this->velocity = velocity;
+    this->velocity = 0;
     this->angle = angle;
     this->rotation = 0;
-    this->size = size;
+    this->size = 0.75;
+    this->yaccel = 0;
     this->yvelocity = yvelocity;
-    this->xvelocity = 0;
-    this->zvelocity = 0;
-    this->yaccel = -0.01;
+    this->xvelocity = xvelocity;
+    this->zvelocity = zvelocity;
     speed = 1;
     this->damage = 50;
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
@@ -57,26 +57,26 @@ Flame::Flame(float x, float y, float z, float size, float angle, float velocity,
     this->object = create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color, GL_FILL);
 }
 
-void Flame::draw(glm::mat4 VP) {
+void Monflame::draw(glm::mat4 VP) {
     Matrices.model = glm::mat4(1.0f);
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
     glm::mat4 scale = glm::scale(glm::vec3(this->size, this->size ,this->size));
     glm::mat4 rotate1   = glm::rotate((float) (this->rotation2 * M_PI / 180.0f), glm::vec3(1, 0, 0));// plane made was 90 wrong pitch
     glm::mat4 rotate    = glm::rotate((float) (this->rotation  * M_PI / 180.0f), glm::vec3(0, -1, 0));// roll
     glm::mat4 rotate2   = glm::rotate((float) (this->rotation1 * M_PI / 180.0f), glm::vec3(0, 0, 1)); // yaw
-    mainrotation = rotate*rotate1*rotate2;
+    // mainrotation = rotate*rotate1*rotate2;
     // No need as coords centered at 0, 0, 0 of cube arouund which we waant to rotate
-    Matrices.model *= (translate * mainrotation * scale);
+    Matrices.model *= (translate * scale);
     glm::mat4 MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
     draw3DObject(this->object);
 }
 
-void Flame::set_position(float x, float y, float z) {
+void Monflame::set_position(float x, float y, float z) {
     this->position = glm::vec3(x, y, z);
 }
 
-void Flame::tick() {
+void Monflame::tick() {
   float LO = -0.1;
   float HI = 0.1;
   this->position.x -= this->velocity * sin(this->angle*M_PI/180.0f);
@@ -85,12 +85,9 @@ void Flame::tick() {
   this->yvelocity += this->yaccel;
   this->position.x += this->xvelocity;
   this->position.z += this->zvelocity;
-  // printf("%f--x, %f--y, %f--z, %f--velocity, %f--yaccel, %f--yvelocity, %f--xvelocity, %f--zvelocity, %f--angle ---correct\n",this->position.x, this->position.y, this->position.z, this->velocity, this->yaccel, this->yvelocity, this->xvelocity, this->zvelocity, this->angle);
-  // ball.position.z -= ball.speed*cos(ball.rotation*M_PI/180.0f);
-  // ball.position.x -= ball.speed*sin(ball.rotation*M_PI/180.0f);
 }
 
-bounding_box_t Flame::bounding_box() {
+bounding_box_t Monflame::bounding_box() {
   bounding_box_t bbox = {this->position.x, this->position.y, this->position.z, this->size, this->size, this->size};
   return bbox;
 }

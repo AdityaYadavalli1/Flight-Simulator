@@ -82,7 +82,7 @@ void wind();
 void collisions();
 void helperGenerateRocks();
 void helperGenerateVolcanoes();
-void cannon();
+void longshoot();
 void shortshoot();
 void bombshoot();
 void monster_handling();

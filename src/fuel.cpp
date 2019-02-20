@@ -74,7 +74,6 @@ void Fuel::set_position(float x, float y) {
 
 void Fuel::tick(float curfuel) {
   this->size = curfuel/5000000;
-  printf("%f\n",this->size);
 
 }
 

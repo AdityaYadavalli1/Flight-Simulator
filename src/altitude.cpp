@@ -64,8 +64,6 @@ void Altitude::set_position(float x, float y) {
 
 void Altitude::tick(float curAltitude) {
   this->size = (curAltitude)/50;
-  // printf("%f\n",this->size);
-
 }
 
 bounding_box_t Altitude::bounding_box() {

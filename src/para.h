@@ -23,6 +23,7 @@ public:
     int isBoss;
 private:
     VAO *main_body;
+    VAO *bb;
 };
 
 #endif // MONSTER_H
