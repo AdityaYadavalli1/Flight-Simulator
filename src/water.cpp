@@ -4,7 +4,7 @@
 Water::Water(float x, float y, float z, color_t color) {
     this->position = glm::vec3(x, y, z);
     this->rotation = 0;
-    static const GLfloat vertex_buffer_data[] = {
+    GLfloat vertex_buffer_data[] = {
         -200.0f, 0.0f,-200.0f, // triangle 1 : begin
         -200.0f, 0.0f, 200.0f,
          200.0f, 0.0f, 200.0f, // triangle 1 : end

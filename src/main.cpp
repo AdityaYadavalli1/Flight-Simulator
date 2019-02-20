@@ -1,14 +1,17 @@
 #include "main.h"
 #include "timer.h"
-#include "boat.h"
 #include "water.h"
 #include "rock.h"
 #include "flame.h"
 #include "monster.h"
-#include "boss.h"
-#include "powerup.h"
+#include "volcano.h"
+#include "arrow.h"
 #include "ball.h"
-
+#include "smoke.h"
+#include "para.h"
+#include "fuel.h"
+#include "altitude.h"
+#include "fuelcan.h"
 using namespace std;
 
 GLMatrices Matrices;
@@ -20,62 +23,34 @@ GLFWwindow *window;
 **************************/
 
 int health = 100, level = 1, score = 0;
-Boat player;
-Water water;
-Boat testloc;
+
+int volcanoRadius = 9;
 int viewType = 1;
 float screen_zoom = 100, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
+int currentCheckpoint = 0;
 vector<Rock> rocks;
+vector<Volcano> volcanoes;
 vector<Flame> flames;
 vector<Flame> monflames;
+vector<Arrow> arrows;
 vector<Monster> monsters;
-vector<Boss> bosses;
-vector<Powerup> powerups;
+vector<Smoke> smoke;
+vector<Para> para;
+vector<Fuelcan> fuelcan;
+int smokeRadius = 2;
+int paraRadius = 200;
 Ball ball;
-
+Water water;
+Fuel fuel;
+Altitude altitude;
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+int camrotate = 0;
 Timer t60(1.0 / 60);
-
-float xview(int type){
-  switch(type){
-    case 1:
-      return ball.position.x + 3*sin(ball.rotation*M_PI/180.0f);
-    case 2:
-      return ball.position.x;
-    case 3:
-      return 0;
-    case 4:
-      return ball.position.x - 1.75*sin(ball.rotation*M_PI/180.0f);
-    }
-}
-
-float yview(int type){
-  switch(type){
-    case 1:
-      return ball.position.y + 3;
-    case 2 :
-      return 30;
-    case 3:
-      return 20;
-    case 4:
-      return ball.position.y + 0.75;
-  }
-}
-
-float zview(int type){
-  switch(type){
-    case 1:
-      return 3*cos(ball.rotation*M_PI/180.0f) + ball.position.z;
-    case 2:
-      return ball.position.z;
-    case 3:
-      return 0;
-    case 4:
-      return ball.position.z - 1.75*cos(ball.rotation*M_PI/180.0f);
-  }
-}
-
-
+int countTime = 20;
+int EcountTime = 150;
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
 void draw() {
@@ -87,18 +62,45 @@ void draw() {
     glUseProgram (programID);
 
     // Eye - Location of camera. Don't change unless you are sure!!
-    glm::vec3 eye (xview(viewType), yview(viewType), zview(viewType));
 
-    // Target - Where is the camera looking at.  Don't change unless you are sure!!
-    glm::vec3 target = ball.position;
-    if (viewType == 4) target.z -= 15*cos(ball.rotation*M_PI/180.0f), target.x -= 15*sin(ball.rotation*M_PI/180.0f);
-    // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
+    glm::vec3 eye(5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f));
+    glm::vec3 target (0, 0, 0);
     glm::vec3 up (0, 1, 0);
-    if (viewType == 2) up.y = 0, up.z = -1, up.x = -1; // up vector down
-    else up.y = 1, up.z = 0, up.x = 0; // right back up
-
-    // Compute Camera matrix (view)
-    Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
+    if(viewType == 1)
+    {
+      glm::vec3 eye(ball.position.x + 3*sin(ball.rotation*M_PI/180.0f),ball.position.y + 3,3*cos(ball.rotation*M_PI/180.0f) + ball.position.z);
+      glm::vec3 target=ball.position;
+      glm::vec3 up (0, 1, 0);
+      Matrices.view = glm::lookAt( eye, target, up );
+    }
+    else if (viewType==2)
+    {
+      glm::vec3 eye(ball.position.x,30,ball.position.z);
+      glm::vec3 target=ball.position;
+      glm::vec3 up(0,-1,-1);
+      Matrices.view = glm::lookAt( eye, target, up );
+    }
+    else if (viewType==3)
+    {
+      glm::vec3 eye(0,20,0);
+      glm::vec3 target = ball.position;
+      glm::vec3 up (0, 1, 0);
+      Matrices.view = glm::lookAt( eye, target, up );
+    }
+    else if (viewType==4)
+    {
+      glm::vec3 eye(ball.position.x - 3*sin(ball.rotation*M_PI/180.0f),ball.position.y + 0.75,ball.position.z - 3*cos(ball.rotation*M_PI/180.0f));
+      glm::vec3 target(ball.position.x-15*sin(ball.rotation*M_PI/180.0f),ball.position.y,ball.position.z-15*cos(ball.rotation*M_PI/180.0f));
+      glm::vec3 up (0, 1, 0);
+      Matrices.view = glm::lookAt( eye, target, up );
+    }
+    else
+    {
+      glm::vec3 eye(5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f));
+      glm::vec3 target (0, 0, 0);
+      glm::vec3 up (0, 1, 0);
+      Matrices.view = glm::lookAt( eye, target, up );
+    }
     // Don't change unless you are sure!!
     // Matrices.view = glm::lookAt(glm::vec3(0, 0, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)); // Fixed camera for 2D (ortho) in XY plane
 
@@ -116,87 +118,145 @@ void draw() {
     water.draw(VP);
     // player.draw(VP);
     ball.draw(VP);
+    fuel.draw(VP);
+    altitude.draw(VP);
     // testloc.draw(VP);
     for (int i = 0; i < (int)rocks.size(); rocks[i++].draw(VP));
     for (int i = 0; i < (int)flames.size(); flames[i++].draw(VP));
     for (int i = 0; i < (int)monflames.size(); monflames[i++].draw(VP));
     for (int i = 0; i < (int)monsters.size(); monsters[i++].draw(VP));
-    for (int i = 0; i < (int)bosses.size(); bosses[i++].draw(VP));
-    for (int i = 0; i < (int)powerups.size(); powerups[i++].draw(VP));
+    for (int i = 0; i < (int)volcanoes.size(); volcanoes[i++].draw(VP));
+    for (int i = 0; i < (int)smoke.size(); smoke[i++].draw(VP));
+    for (int i = 0; i < (int)para.size(); para[i++].draw(VP));
+    for (int i = 0; i < (int)fuelcan.size(); fuelcan[i++].draw(VP));
+    for (int i = 0; i < (int)arrows.size(); i++)
+    {
+      if(i==currentCheckpoint)
+      {
+        arrows[i].draw(VP);
+      }
+    }
+
+
 }
 
 
 void tick_input(GLFWwindow *window) {
-    int left  = glfwGetKey(window, GLFW_KEY_LEFT);
-    int right = glfwGetKey(window, GLFW_KEY_RIGHT);
     int up = glfwGetKey(window, GLFW_KEY_UP);
     int down = glfwGetKey(window, GLFW_KEY_DOWN);
+    int left  = glfwGetKey(window, GLFW_KEY_LEFT);
+    int right = glfwGetKey(window, GLFW_KEY_RIGHT);
     int space = glfwGetKey(window, GLFW_KEY_SPACE);
     int s = glfwGetKey(window, GLFW_KEY_S);
-    // int mouseLeft = glfwGetKey(window, GLFW_MOUSE_BUTTON_LEFT);
-    int mouseState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-    if (left) ball.rotation += 1;
-    if (right) ball.rotation -= 1;
+    int d = glfwGetKey(window, GLFW_KEY_D);
+    int a = glfwGetKey(window, GLFW_KEY_A);
+    int w = glfwGetKey(window, GLFW_KEY_W);
+    int e = glfwGetKey(window, GLFW_KEY_E);
+    int r = glfwGetKey(window, GLFW_KEY_R);
+    int b = glfwGetKey(window, GLFW_KEY_B);
+    int mouseLeft = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+    int mouseRight = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+    int one = glfwGetKey(window, GLFW_KEY_1);
+    int two = glfwGetKey(window, GLFW_KEY_2);
+    int three = glfwGetKey(window, GLFW_KEY_3);
+    int four = glfwGetKey(window, GLFW_KEY_4);
+    int five = glfwGetKey(window, GLFW_KEY_5);
+
+    if (one) viewType = 1;
+    if (two) viewType = 2;
+    if (three) viewType = 3;
+    if (four) viewType = 4;
+    if (left)
+    {
+      ball.rotation += 1;
+
+    }
+    if (right)
+    {
+      ball.rotation -= 1;
+
+    }
+    if (d)
+    {
+      ball.rotation1 -= 1;
+
+    }
+    if (a)
+    {
+      ball.rotation1 += 1;
+
+    }
+    if(e)
+    {
+      ball.rotation3 -= 1;
+    }
+    if(r)
+    {
+      ball.rotation3 += 1;
+    }
     if (up) {
       ball.position.z -= ball.speed*cos(ball.rotation*M_PI/180.0f);
       ball.position.x -= ball.speed*sin(ball.rotation*M_PI/180.0f);
+      ball.fuel-= 2000;
     }
     if (down) {
       ball.position.z += ball.speed*cos(ball.rotation*M_PI/180.0f);
       ball.position.x += ball.speed*sin(ball.rotation*M_PI/180.0f);
+      ball.fuel-= 3000;
     }
     if (space)
     {
-      ball.yvelocity = 0.3;
-    }
-    else
-    {
-      ball.yvelocity = 0;
+      if(ball.max_altitude>=ball.position.y+0.3)
+        ball.position.y += 0.3;
     }
     if (s) {
-        ball.yvelocity = -0.3;
+      if(ball.position.y >= 6)
+        ball.position.y -= 0.3;
     }
-    if(mouseState) {
-      cannon(viewType);
+    if(mouseLeft) {
+      cannon();
+    }
+    if(mouseRight) {
+      shortshoot();
+    }
+    if(b) {
+      bombshoot();
     }
 }
 
 int canCount = 0;
-void cannon(int viewType){
-  if (viewType == 1 || viewType == 2){
-    if(canCount < ball.countTime) return;
+void cannon(){
+  if(canCount >= countTime)
+  {
     canCount = 0;
-    double xpos, ypos;
-    glfwGetCursorPos(window, &xpos, &ypos);
-    if(xpos < 0 || xpos > 600 || ypos < 0 || ypos > 600) //Valid Mouse Locations
-      return;
-    float dist = sqrt((xpos-300)*(xpos-300) + (ypos-300)*(ypos-300));
-    float angle = acos((ypos-300) * (-300) / (300*dist)); //dot product
-    if (xpos <= 300) angle *= -1;
-    // angle -= ball.rotation * M_PI / 180.0f;
-    flames.push_back(Flame(ball.position.x, ball.position.y+2, ball.position.z, 0.3, angle, 0.5, dist/900.0, COLOR_RED));
-    //  cout << // XXX: pos << ", " << ypos << ", " << dist << ", " << angle << "\n";
+    flames.push_back(Flame(ball.position.x, ball.position.y+2, ball.position.z, 0.3, ball.rotation, 0.5, 0.3, COLOR_RED));
   }
   return;
 }
-
-void tick_camera(GLFWwindow *window) {
-  int one = glfwGetKey(window, GLFW_KEY_1);
-  int two = glfwGetKey(window, GLFW_KEY_2);
-  int three = glfwGetKey(window, GLFW_KEY_3);
-  int four = glfwGetKey(window, GLFW_KEY_4);
-
-  if (one) viewType = 1;
-  if (two) viewType = 2;
-  if (three) viewType = 3;
-  if (four) viewType = 4;
-
+void shortshoot() {
+  if(canCount >= countTime)
+  {
+    canCount = 0;
+    flames.push_back(Flame(ball.position.x, ball.position.y+2, ball.position.z, 0.3, ball.rotation, 0.5, 0, COLOR_RED));
+  }
+  return;
+}
+void bombshoot() {
+  if(canCount >= countTime)
+  {
+    canCount = 0;
+    flames.push_back(Flame(ball.position.x, ball.position.y-2, ball.position.z, 0.3, ball.rotation, 0.0, 0, COLOR_RED));
+  }
+  return;
 }
 
 
 void tick_elements() {
   canCount++;
   ball.tick();
+  fuel.tick(ball.fuel);
+  altitude.tick(ball.position.y);
+  for(int i = 0; i < (int)para.size(); para[i++].tick())
   for (int i = 0; i < (int)rocks.size(); rocks[i++].tick());
 
   for (int i = 0; i < (int)flames.size(); i++) {
@@ -211,43 +271,6 @@ void tick_elements() {
 
   for (int i = 0; i < (int)monsters.size();  monsters[i++].tick());
 
-  for (int i = 0; i < (int)bosses.size(); bosses[i++].tick());
-  for (int i = 0; i < (int)powerups.size(); powerups[i++].tick());
-
-  // wind();
-}
-
-int windlock = 400, windCounter = 0, windLast = 80, windLastCounter = 0, windBool = 0;
-void wind(){
-  if(windCounter == windlock && !windBool){//Wind Start,Intialize Wind
-    windBool = 1;
-    windLastCounter = 0;
-    float windAngle = 0 + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/360));
-    windlock = 300 + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/300));
-    ball.xautovelocity = 0.1 * sin(windAngle * M_PI / 180.0f);
-    ball.zautovelocity = 0.1 * cos(windAngle * M_PI / 180.0f);
-  }
-  if(windBool){//When Wind
-    windLastCounter++;
-  }
-  else{//When Not Wind
-    windCounter++;
-  }
-  if(windLastCounter == windLast && windBool){//Wind End
-    windBool = 0;
-    windCounter = 0;
-    ball.xautovelocity = 0;
-    ball.zautovelocity = 0;
-    windLast = 200 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/100));
-  }
-}
-
-void detect_player_rock_collisions(){
-  for (int i = 0; i < (int)rocks.size(); i++) {
-    if(detect_collision_player(rocks[i].bounding_box(), ball.bounding_box()))
-      health--, ball.yvelocity = 0.2;
-
-  }
 }
 
 void cannonball_monster_collisions(){
@@ -260,16 +283,13 @@ void cannonball_monster_collisions(){
     }
   }
 }
-
-void cannonball_boss_collisions(){
-  for (int i = 0; i < (int)bosses.size(); i++){
-    for (int j = 0; j < (int)flames.size(); j++){
-      if (detect_collision(flames[j].bounding_box(), bosses[i].bounding_box())){
-        bosses[i].health -= ball.power;
-        flames.erase(flames.begin() + j);
+void fuelcan_player_collisions() {
+  for (int i = 0; i < (int)fuelcan.size(); i++){
+    if (detect_collision(fuelcan[i].bounding_box(), ball.bounding_box())){
+        fuelcan.erase(fuelcan.begin() + i);
+        ball.fuel += 100000;
       }
     }
-  }
 }
 
 
@@ -284,100 +304,246 @@ void cannonball_rock_collisions(){
   }
 
 }
+void cannonball_para_collisions(){
+  for(int i = 0; i < (int)flames.size(); i++){
+    for(int j = 0; j < (int)para.size(); j++)
+      if(detect_collision(flames[i].bounding_box(), para[j].bounding_box())){
+        score += 100;
+        flames.erase(flames.begin() + i);
+        para.erase(para.begin() + j);
+      }
+  }
 
+}
 void detect_player_monflames_collisions() {
   for (int i = 0; i < (int)monflames.size(); i++){
-    if (detect_collision_player(monflames[i].bounding_box(), ball.bounding_box())){
+    if (detect_collision(monflames[i].bounding_box(), ball.bounding_box())){
       health -= monflames[i].damage;
       monflames.erase(monflames.begin() + i);
     }
   }
 }
+bool volcano_helper()
+{
+  for(int i=0;i<volcanoes.size();i++)
+  {
 
-void detect_player_powerups_collisions(){
-  for (int i = 0; i < (int)powerups.size(); i++){
-    if (detect_collision_player(powerups[i].bounding_box(), ball.bounding_box())){
-      switch(powerups[i].type){
-      case 1:
-        health += powerups[i].value;
-        break;
-      case 2:
-        ball.countTime += powerups[i].value;
-        break;
-      case 3:
-        score += powerups[i].value;
-        break;
+      if(glm::distance(volcanoes[i].position,ball.position) <= volcanoRadius)
+      {
+        // printf("%f\n",glm::distance(volcanoes[i].position,ball.position));
+        return 1;
       }
-      powerups.erase(powerups.begin() + i);
+  }
+  return 0;
+}
+bool smoke_passed_helper()
+{
+  for(int i=0;i<smoke.size();i++)
+  {
+
+      if(glm::distance(smoke[i].position,ball.position) <= smokeRadius)
+      {
+        // printf("%f\n",glm::distance(smoke[i].position,ball.position));
+        smoke.erase(smoke.begin() + i);
+        return 1;
+      }
+  }
+  return 0;
+}
+void Para_inRadius()
+{
+  for(int i=0; i<para.size(); i++)
+  {
+    if(glm::distance(para[i].position,ball.position) <= paraRadius)
+    {
+      // printf("%f\n",glm::distance(para[i].position,ball.position));
+      para[i].inRadius = 1;
     }
   }
+  return;
 }
-
+void volcano_hit()
+{
+  if(volcano_helper())
+  {
+    health -= 20;
+  }
+}
+void smoke_passed()
+{
+  if(smoke_passed_helper())
+  {
+    score += 10;
+  }
+}
 void collisions() {
-  detect_player_rock_collisions();
+  // detect_player_rock_collisions();
   cannonball_monster_collisions();
   detect_player_monflames_collisions();
   cannonball_rock_collisions();
-  cannonball_boss_collisions();
-  detect_player_powerups_collisions();
+  volcano_hit();
+  smoke_passed();
+  Para_inRadius();
+  cannonball_para_collisions();
+  fuelcan_player_collisions();
+  // detect_player_volcano_collisions();
 }
 
-void helperGenerateRocks(float LOW, float HI, float multx, float multz, float mutly){
-  int numRocks = 20.0 + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(5.0))); // at min 20 max 40
-  for(int i = 0; i < numRocks; i++)
+void helperGenerateRocks()
+{
+  int numRocks = 60;
+  for(int i = 0; i < numRocks/4; i++)
+  {
+    float y = 0.20;
+    float x = (rand()) /( static_cast <float> (RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    rocks.push_back(Rock(1*x, y, 1*y, COLOR_BROWN));
+  }
+  for(int i = 0; i < numRocks/4; i++)
+  {
+    float y = 0.20;
+    float x = (rand()) /( static_cast <float> (RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    rocks.push_back(Rock(1*x, y, -1*z, COLOR_BROWN));
+  }
+  for(int i = 0; i < numRocks/4; i++)
+  {
+    float y = 0.20;
+    float x = (rand()) /( static_cast <float> (RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    rocks.push_back(Rock(-1*x, y, -1*z, COLOR_BROWN));
+  }
+  for(int i = 0; i < numRocks/4; i++)
+  {
+    float y = 0.20;
+    float x = (rand()) /( static_cast <float> (RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    rocks.push_back(Rock(-1*x, y, 1*z, COLOR_BROWN));
+  }
+  return;
+}
+
+void helperGenerateVolcanoes(){
+  int numVolcanoes = 40;
+  for(int i = 0; i < numVolcanoes/4; i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand())/((RAND_MAX/(200)));
+    volcanoes.push_back(Volcano(x*1, 2, z*1, 1, 50));
+  }
+  for(int i = 0; i < numVolcanoes/4; i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand())/((RAND_MAX/(200)));
+    volcanoes.push_back(Volcano(x*1, 2, z*-1, 1, 50));
+  }
+  for(int i = 0; i < numVolcanoes/4; i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand())/((RAND_MAX/(200)));
+    volcanoes.push_back(Volcano(x*-1, 2, z*-1, 1, 50));
+  }
+  for(int i = 0; i < numVolcanoes/4; i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand())/((RAND_MAX/(200)));
+    volcanoes.push_back(Volcano(x*-1, 2, z*1, 1, 50));
+  }
+  return;
+}
+void helperGenerateMonsters(){
+  int numMonsters = 32;
+  float y = 2;
+  for(int i = 0; i<numMonsters/4;i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    monsters.push_back(Monster(x*1, 2, z*1, y/2, 50));
+  }
+  for(int i = 0; i<numMonsters/4;i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    monsters.push_back(Monster(x*1, 2, z*-1, y/2, 50));
+  }
+  for(int i = 0; i<numMonsters/4;i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    monsters.push_back(Monster(x*-1, 2, z*-1, y/2, 50));
+  }
+  for(int i = 0; i<numMonsters/4;i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    monsters.push_back(Monster(x*-1, 2, z*1, y/2, 50));
+  }
+}
+void helperGenerateFuelcan(){
+  int numFuelcan = 32;
+  float y = 12;
+  for(int i = 0; i<numFuelcan/4; i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    fuelcan.push_back(Fuelcan(x*1, y, z*1, y/2));
+  }
+  for(int i = 0; i<numFuelcan/4; i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    fuelcan.push_back(Fuelcan(x*1, y, z*-1, y/2));
+  }
+  for(int i = 0; i<numFuelcan/4;i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    fuelcan.push_back(Fuelcan(x*-1, y, z*-1, y/2));
+  }
+  for(int i = 0; i<numFuelcan/4; i++)
+  {
+    float x = (rand()) /((RAND_MAX/(200)));
+    float z = (rand()) /((RAND_MAX/(200)));
+    fuelcan.push_back(Fuelcan(x*-1, y, z*1, y/2));
+  }
+}
+void helperGenerateArrows() {
+  int numArrows = 32;
+  float y = 15;
+  for(int i = 0; i<numArrows; i++)
+  {
+    arrows.push_back(Arrow(monsters[i].position.x, y, monsters[i].position.z,1));
+  }
+  return;
+}
+
+void helperGenerateSmoke() {
+  int numSmoke = 32;
+  float y = 10;
+  for(int i = 0; i<numSmoke; i++)
+  {
+    if(i%2==0)
     {
-      float y = 0.25; //+ static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(0.75))); // height
-      float x = LOW + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(HI-LOW)));
-      float z = LOW + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(HI-LOW)));
-      rocks.push_back(Rock(x*multx, y, z*multz, COLOR_BROWN));
+      smoke.push_back(Smoke(monsters[i].position.x - 25, y, monsters[i].position.z + 25,1));
     }
+    else
+    {
+        smoke.push_back(Smoke(monsters[i].position.x + 25, y, monsters[i].position.z - 25,1));
+    }
+  }
   return;
 }
-
-void generaterocks(){
-  helperGenerateRocks(5.0, 190.0, 1, 1, -1);
-  helperGenerateRocks(5.0, 190.0, 1, -1, -1);
-  helperGenerateRocks(5.0, 190.0, -1, -1, 1);
-  helperGenerateRocks(5.0, 190.0, -1, 1, 1);
-
+void helperGeneratePara() {
+  int numPara = 32;
+  float y = 140;
+  for(int i = 0; i<numPara; i++)
+  {
+    para.push_back(Para(monsters[i].position.x + 10, y, monsters[i].position.z - 10,1));
+  }
   return;
 }
-void helperGenerateMonsters(float quadx, float quadz, float size){
-  float LO = 5.0, HI = 90.0;
-  float x = LO + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(HI-LO)));
-  float z = LO + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(HI-LO)));
-  monsters.push_back(Monster(x*quadx, 2*size, z*quadz, size, 50));
-}
-
-void generateMonsters(){
-  helperGenerateMonsters(1,1,1);
-  helperGenerateMonsters(1,-1,1);
-  helperGenerateMonsters(-1,-1,1);
-  helperGenerateMonsters(-1,1,1);
-  return;
-}
-
-float distvec(float x1, float y1, float z1, float x2, float y2, float z2){
-  return sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
-}
-
-bool inRange(float x1, float y1, float z1, float distance, Monster& M){
-  float x2 = M.position.x, y2 = M.position.y, z2 = M.position.z;
-  float dist = distvec(x1, y1, z1, x2, y2, z2);
-  if(dist <= distance) return 1;
-  else return 0;
-}
-
-bool inRangeB(float x1, float y1, float z1, float distance, Boss& M){
-  float x2 = M.position.x, y2 = M.position.y, z2 = M.position.z;
-  float dist = distvec(x1, y1, z1, x2, y2, z2);
-  if(dist <= distance) return 1;
-  else return 0;
-}
-
-
 void monster_firing(Monster& M, float size, float vel, int damage){
-  float dist = distvec(M.position.x, M.position.y, M.position.z, ball.position.x, ball.position.y, ball.position.z);
+  float dist = glm::distance(M.position,ball.position);
   float vecx = ball.position.x - M.position.x;
   float vecy = ball.position.y - M.position.y;
   float vecz = ball.position.z - M.position.z;
@@ -392,77 +558,33 @@ void monster_firing(Monster& M, float size, float vel, int damage){
   return;
 }
 
-
-void boss_firing(Boss& M, float size, float vel, int damage){
-  float dist = distvec(M.position.x, M.position.y, M.position.z, ball.position.x, ball.position.y, ball.position.z);
-  float vecx = ball.position.x - M.position.x;
-  float vecy = ball.position.y - M.position.y;
-  float vecz = ball.position.z - M.position.z;
-  float t = dist / vel;
-  Flame temp = Flame(M.position.x, M.position.y, M.position.z, size, 0, 0,vel*vecy/dist, COLOR_DARK_RED);
-  temp.yaccel = 0;
-  temp.xvelocity = vel*vecx/dist;
-  temp.zvelocity = vel*vecz/dist;
-  temp.damage = damage;
-  monflames.push_back(temp);
-  M.counter = 0;
-  return;
-}
-
-
-bool can_fire(Monster& M, float range){
-  if (inRange(ball.position.x, ball.position.y, ball.position.z, range, M) && M.counter >= M.countTime) return 1;
+bool can_fire(Monster& M, float range)
+{
+  // if (inRange(ball.position.x, ball.position.y, ball.position.z, range, M) && M.counter >= M.countTime) return 1;
+  if(glm::distance(ball.position,M.position)<=range && M.counter >= EcountTime)
+  {
+    return 1;
+  }
   return 0;
 }
-
-bool can_fire_B(Boss& M, float range){
-  if (inRangeB(ball.position.x, ball.position.y, ball.position.z, range, M) && M.counter >= M.countTime) return 1;
-  return 0;
-}
-
-
-void boss_handling(){
-  for (int i = 0; i < (int)bosses.size(); i++)
-    {
-        //Monster Dies
-      if (bosses[i].health <= 0) bosses.erase(bosses.begin() + i), score += 200;
-      if(can_fire_B(bosses[i], 150))
-        boss_firing(bosses[i], 3, 0.3, 200);
-    }
-}
-
-int bosslock = 0;
+int gameOver=0;
 void monster_handling(){
   for (int i = 0; i < (int)monsters.size(); i++)
     {
       //Monster Dies
       if (monsters[i].health <= 0){
-        int typePowerup = (rand() % 3) + 1;
-        powerups.push_back(Powerup(monsters[i].position.x, monsters[i].position.y - 0.5, monsters[i].position.z, typePowerup));
         monsters.erase(monsters.begin() + i);
+        currentCheckpoint++;
         score += 50;
       }
-      if (monsters.size() == 0 && bosslock == 0) {
-        //Create Boss
-        bosslock = 1;
-        float x = -95 + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(190)));
-        float z = -95 + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(190)));
-        Boss temp = Boss(x, 10, z, 5, 200);
-        temp.countTime = 100;
-        temp.isBoss = 1;
-        bosses.push_back(temp);
+      if (monsters.size() == 0) {
+          gameOver=1;
       }
       //If in Range fire and Time Gap, fire
-      if (can_fire(monsters[i], 20.0)){
+      if (can_fire(monsters[i], 30.0)){
         monster_firing(monsters[i], 0.75, 0.2, 50);
         }
     }
-}
-
-void powerups_handling(){
-  for(int i = 0; i < (int)powerups.size(); i++){
-    if(powerups[i].counter > powerups[i].countMax) powerups.erase(powerups.begin() + i);
-  }
 }
 
 
@@ -471,13 +593,19 @@ void powerups_handling(){
 void initGL(GLFWwindow *window, int width, int height) {
     /* Objects should be created before any other gl function and shaders */
     // Create the models
-
-    // player = Boat(0, 0, 3);
-    ball = Ball(0, 10, 3, COLOR_RED );
+    float fuelsize = ball.fuel/5000000;
+    float altitudesize = ball.position.y/ball.max_altitude;
+    ball = Ball(0, 10, 3, COLOR_RED);
+    fuel = Fuel(-0.8 ,-0.8, fuelsize);
+    altitude = Altitude(-0.6, -0.8, altitudesize);
     water = Water(0, 0, 0, COLOR_SKY_BLUE);
-    // testloc = Boat(0, 0, -5);
-    generaterocks();
-    generateMonsters();
+    helperGenerateRocks();
+    helperGenerateMonsters();
+    helperGenerateArrows();
+    helperGenerateVolcanoes();
+    helperGenerateSmoke();
+    helperGeneratePara();
+    helperGenerateFuelcan();
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders("Sample_GL.vert", "Sample_GL.frag");
     // Get a handle for our "MVP" uniform
@@ -517,23 +645,24 @@ int main(int argc, char **argv) {
         if (t60.processTick()) {
           // 60 fps
           // OpenGL Draw commands
-          sprintf(stringPrint, "Level: %d  Score: %d Health: %d", level, score, health);
+          sprintf(stringPrint, "Level: %d  Score: %d Health: %d Fuel: %d", level, score, health, ball.fuel);
           glfwSetWindowTitle(window, stringPrint);
-
+          // cout << ball.position.x<<" "<<ball.position.y <<'\n';
           draw();
           // Swap Frame Buffer in double buffering
           glfwSwapBuffers(window);
           monster_handling();
-          boss_handling();
-          powerups_handling();
           tick_elements();
           collisions();
-          tick_camera(window);
           tick_input(window);
           if(health <= 0){
             cout << "Sorry, you died. Score: " << score << "\n";
             quit(window);
           }
+          if(gameOver) {
+            cout << "Game Over, You won" << score <<'\n';
+          }
+          // printf("%f -- ballrotate\n", ball.rotation);
         }
 
         // Poll for Keyboard and mouse events
@@ -543,21 +672,16 @@ int main(int argc, char **argv) {
     quit(window);
 }
 
-bool detect_collision_player(bounding_box_t a, bounding_box_t b) {
-  float k;
-  if (a.y >= b.y) k = a.height + b.height;
-  else k = a.height;
-  return (abs(a.x - b.x) < (a.width + b.width + b.length*sin(ball.rotation*M_PI/180.0f))) &&
-           (abs(a.y - b.y) < k) &&
-    (abs(a.z - b.z) < (a.length + b.length - b.width*sin(ball.rotation*M_PI/180.0f)));
-}
-
 bool detect_collision(bounding_box_t a, bounding_box_t b) {
     return (abs(a.x - b.x) < (a.width + b.width)) &&
            (abs(a.y - b.y) < (a.height + b.height)) &&
            (abs(a.z - b.z) < (a.length + b.length));
 }
-
+bool detect_collision_volcano(bounding_box_t a, bounding_box_t b) {
+    return (abs(a.x - b.x) < (a.width + b.width)) &&
+           (abs(a.y - b.y) < (a.height + b.height)) &&
+           (abs(a.z - b.z) < (a.length + b.length));
+}
 void reset_screen() {
     float top    = screen_center_y + 4 / screen_zoom;
     float bottom = screen_center_y - 4 / screen_zoom;

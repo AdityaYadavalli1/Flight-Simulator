@@ -10,6 +10,9 @@ public:
     Flame(float x, float y, float z, float size, float angle, float velocity, float yvelocity, color_t color);
     glm::vec3 position;
     float rotation;
+    float rotation1;
+    float rotation2;
+    glm::mat4 mainrotation;
     void draw(glm::mat4 VP);
     void set_position(float x, float y, float z);
     void tick();

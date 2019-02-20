@@ -23,9 +23,9 @@ struct color_t {
 // nonedit.cpp
 GLFWwindow *initGLFW(int width, int height);
 GLuint     LoadShaders(const char *vertex_file_path, const char *fragment_file_path);
-struct VAO *create3DObject(GLenum primitive_mode, int numVertices, const GLfloat *vertex_buffer_data, const GLfloat *color_buffer_data, GLenum fill_mode = GL_FILL);
-struct VAO *create3DObject(GLenum primitive_mode, int numVertices, const GLfloat *vertex_buffer_data, const GLfloat red, const GLfloat green, const GLfloat blue, GLenum fill_mode = GL_FILL);
-struct VAO *create3DObject(GLenum primitive_mode, int numVertices, const GLfloat *vertex_buffer_data, const color_t color, GLenum fill_mode = GL_FILL);
+struct VAO *create3DObject(GLenum primitive_mode, int numVertices, GLfloat *vertex_buffer_data, const GLfloat *color_buffer_data, GLenum fill_mode = GL_FILL);
+struct VAO *create3DObject(GLenum primitive_mode, int numVertices, GLfloat *vertex_buffer_data, const GLfloat red, const GLfloat green, const GLfloat blue, GLenum fill_mode = GL_FILL);
+struct VAO *create3DObject(GLenum primitive_mode, int numVertices, GLfloat *vertex_buffer_data, const color_t color, GLenum fill_mode = GL_FILL);
 void       draw3DObject(struct VAO *vao);
 
 // input.cpp
@@ -80,17 +80,25 @@ extern float screen_zoom, screen_center_x, screen_center_y;
 void reset_screen();
 void wind();
 void collisions();
-void helperGenerateRocks(float LO, float HI, float quadx, float quadz);
-void generaterocks();
-void cannon(int viewType);
+void helperGenerateRocks();
+void helperGenerateVolcanoes();
+void cannon();
+void shortshoot();
+void bombshoot();
 void monster_handling();
 void generateMonsters();
-void helperGenerateMonsters(float quadx, float quadz);
+void helperGenerateMonsters();
 void detect_player_monflames_collisions();
 void detect_player_powerups_collisions();
+void detect_player_volcano_collisions();
 bool inRange(float x1, float y1, float z1, float x2, float y2, float z2, float distance);
 bool inRangeB(float x1, float y1, float z1, float x2, float y2, float z2, float distance);
-float distvec(float x1, float y1, float z1, float x2, float y2, float z2);
+// float distvec(float x1, float y1, float z1, float x2, float y2, float z2);
+bool volcano_helper();
+void volcano_hit();
+bool smoke_passed_helper();
+void smoke_passed();
+void helperGenerateArrows();
 void cannonball_rock_collisions();
 void cannonball_boss_collisions();
 void monster_firing(float size, float vel);
@@ -112,4 +120,5 @@ extern const color_t COLOR_DARK_BROWN;
 extern const color_t COLOR_YELLOW;
 extern const color_t COLOR_DARK_RED;
 extern const color_t COLOR_SKY_BLUE;
+extern const color_t COLOR_GREY;
 #endif
