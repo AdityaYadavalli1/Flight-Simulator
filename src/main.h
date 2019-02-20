@@ -121,4 +121,5 @@ extern const color_t COLOR_YELLOW;
 extern const color_t COLOR_DARK_RED;
 extern const color_t COLOR_SKY_BLUE;
 extern const color_t COLOR_GREY;
+extern const color_t COLOR_WHITE;
 #endif

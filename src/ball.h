@@ -13,6 +13,7 @@ public:
     float rotation1;
     float rotation2;
     float rotation3;
+    float rotation4;
     int fuel;
     int max_altitude;
     glm::mat4 mainrotation;

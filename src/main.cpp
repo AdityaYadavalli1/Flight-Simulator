@@ -13,6 +13,7 @@
 #include "fuel.h"
 #include "altitude.h"
 #include "fuelcan.h"
+#include "compass.h"
 using namespace std;
 
 GLMatrices Matrices;
@@ -46,9 +47,11 @@ Ball ball;
 Water water;
 Fuel fuel;
 Altitude altitude;
+Compass compass;
 Timer t60(1.0 / 60);
 int countTime = 20;
 int EcountTime = 150;
+double x1 = -1, ypoint = -1;
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
 void draw() {
@@ -92,6 +95,13 @@ void draw() {
       glm::vec3 up (0, 1, 0);
       Matrices.view = glm::lookAt( eye, target, up );
     }
+    else if (viewType==5)
+    {
+      glm::vec3 eye(ball.position.x + 3*sin(ball.rotation4*M_PI/180.0f),ypoint/10 - 25,3*cos(ball.rotation4*M_PI/180.0f) + ball.position.z);
+      glm::vec3 target=ball.position;
+      glm::vec3 up (0, 1, 0);
+      Matrices.view = glm::lookAt( eye, target, up );
+    }
     else
     {
       glm::vec3 eye(5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f));
@@ -116,6 +126,7 @@ void draw() {
     ball.draw(VP);
     fuel.draw(VP);
     altitude.draw(VP);
+    compass.draw(VP);
     for (int i = 0; i < (int)rocks.size(); i++)
     {
       rocks[i].draw(VP);
@@ -197,63 +208,81 @@ void tick_input(GLFWwindow *window) {
     {
       viewType = 4;
     }
-    if (left)
+    if(five)
     {
-      ball.rotation += 1;
+      viewType = 5;
+      glfwGetCursorPos(window, &x1, &ypoint);
+      // printf("%f --ballposx, %f --ballposy %f --x1, %f --ypoint\n", ball.position.x, ball.position.y, x1, ypoint);
+      if(x1 -320 > ball.position.x)
+      {
+        ball.rotation4 -= 1;
+      }
+      else
+      {
+        ball.rotation4 +=1;
+      }
+    }
+    if(!five)
+    {
+      ball.rotation4 = 0;
+      if (left)
+      {
+        ball.rotation += 1;
 
-    }
-    if (right)
-    {
-      ball.rotation -= 1;
+      }
+      if (right)
+      {
+        ball.rotation -= 1;
 
-    }
-    if (d)
-    {
-      ball.rotation1 -= 1;
+      }
+      if (d)
+      {
+        ball.rotation1 -= 1;
 
-    }
-    if (a)
-    {
-      ball.rotation1 += 1;
+      }
+      if (a)
+      {
+        ball.rotation1 += 1;
 
-    }
-    if(e)
-    {
-      ball.rotation3 -= 1;
-    }
-    if(r)
-    {
-      ball.rotation3 += 1;
-    }
-    if (up)
-    {
-      ball.position.x -= ball.speed*sin(ball.rotation*M_PI/180.0f);
-      ball.position.z -= ball.speed*cos(ball.rotation*M_PI/180.0f);
-      ball.fuel-= 2000;
-    }
-    if (down)
-    {
-      ball.position.x += ball.speed*sin(ball.rotation*M_PI/180.0f);
-      ball.position.z += ball.speed*cos(ball.rotation*M_PI/180.0f);
-      ball.fuel-= 3000;
-    }
-    if (space)
-    {
-      if(ball.max_altitude>=ball.position.y+0.3)
-        ball.position.y += 0.3;
-    }
-    if (s) {
-      if(ball.position.y >= 6)
-        ball.position.y -= 0.3;
-    }
-    if(mouseLeft) {
-      longshoot();
-    }
-    if(mouseRight) {
-      shortshoot();
-    }
-    if(b) {
-      bombshoot();
+      }
+      if(e)
+      {
+        ball.rotation3 -= 1;
+      }
+      if(r)
+      {
+        ball.rotation3 += 1;
+      }
+      if (up)
+      {
+        ball.position.x -= ball.speed*sin(ball.rotation*M_PI/180.0f);
+        ball.position.z -= ball.speed*cos(ball.rotation*M_PI/180.0f);
+        ball.fuel-= 2000;
+      }
+      if (down)
+      {
+        ball.position.x += ball.speed*sin(ball.rotation*M_PI/180.0f);
+        ball.position.z += ball.speed*cos(ball.rotation*M_PI/180.0f);
+        ball.fuel-= 3000;
+      }
+      if (space)
+      {
+        if(ball.max_altitude>=ball.position.y+0.3)
+          ball.position.y += 0.3;
+      }
+      if (s) {
+        if(ball.position.y >= 6)
+          ball.position.y -= 0.3;
+      }
+      if(mouseLeft) {
+        longshoot();
+      }
+      if(mouseRight) {
+        shortshoot();
+      }
+      if(b) {
+        bombshoot();
+      }
     }
 }
 
@@ -293,6 +322,7 @@ void tick_elements()
   ball.tick();
   fuel.tick(ball.fuel);
   altitude.tick(ball.position.y);
+  compass.tick(ball.rotation);
   for(int i = 0; i < (int)para.size(); i++)
   {
     para[i].tick();
@@ -343,7 +373,7 @@ void fuelcan_player_collisions()
     if (detect_collision(fuelcan[i].bounding_box(), ball.bounding_box()))
     {
         fuelcan.erase(fuelcan.begin() + i);
-        ball.fuel += 100000;
+        ball.fuel += 1000000;
       }
     }
     return;
@@ -648,7 +678,10 @@ void monster_handling()
       if (monsters[i].health <= 0)
       {
         monsters.erase(monsters.begin() + i);
-        currentCheckpoint++;
+        if(currentCheckpoint < 32)
+        {
+          currentCheckpoint++;
+        }
         score += 50;
       }
       if (monsters.size() == 0)
@@ -671,9 +704,11 @@ void initGL(GLFWwindow *window, int width, int height) {
     // Create the models
     float fuelsize = ball.fuel/5000000;
     float altitudesize = ball.position.y/ball.max_altitude;
+    float compasssize = 2/3;
     ball = Ball(0, 10, 3, COLOR_RED);
     fuel = Fuel(-0.8 ,-0.8, fuelsize);
     altitude = Altitude(-0.6, -0.8, altitudesize);
+    compass = Compass(0.8, 0.0, compasssize);
     water = Water(0, 0, 0, COLOR_SKY_BLUE);
     helperGenerateRocks();
     helperGenerateMonsters();
@@ -729,7 +764,7 @@ int main(int argc, char **argv) {
           tick_elements();
           collisions();
           tick_input(window);
-          if(health <= 0){
+          if(health <= 0 || ball.fuel <= 0){
             cout << "Sorry, you died. Score: " << score << "\n";
             quit(window);
           }

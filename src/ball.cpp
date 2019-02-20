@@ -9,6 +9,7 @@ Ball::Ball(float x, float y, float z, color_t color) {
     this->fuel = 5000000;
     this->max_altitude = 50;
     this->rotation3 = 0;
+    this->rotation4 = 0;
     this->camrotation = 0;
     this->mainrotation = glm::mat4(1.0f);
     this->countTime = 40;
@@ -27,7 +28,7 @@ void Ball::draw(glm::mat4 VP) {
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
     glm::mat4 scale = glm::scale(glm::vec3(0.4f, 0.4f ,0.4f));
     glm::mat4 rotate1   = glm::rotate((float) (this->rotation2 * M_PI / 180.0f), glm::vec3(1, 0, 0));// plane made was 90 wrong pitch
-    glm::mat4 rotate    = glm::rotate((float) (this->rotation  * M_PI / 180.0f), glm::vec3(0, -1, 0));// roll
+    glm::mat4 rotate    = glm::rotate((float) ((this->rotation + this->rotation4) * M_PI / 180.0f), glm::vec3(0, -1, 0));// roll
     glm::mat4 rotate2   = glm::rotate((float) (this->rotation1 * M_PI / 180.0f), glm::vec3(0, 0, 1)); // yaw
     glm::mat4 rotate3   = glm::rotate((float) (this->rotation3 * M_PI / 180.0f), glm::vec3(0, 1, 0)); // weird but tilt
     mainrotation = rotate*rotate1*rotate2*rotate3;
